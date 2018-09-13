@@ -42,5 +42,5 @@ To send to Twitter, change `MODE` in `index.js` to `prod`. Get on me to test pro
 - Unit testing.
 
 
-### LICECNSE
+### LICENSE
 MIT
