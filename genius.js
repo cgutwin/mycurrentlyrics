@@ -5,41 +5,59 @@ require('dotenv').config();
 const LYRICS = {};
 const GENIUS = new LYRICIST(process.env.GENIUS_ACCESS_TOKEN);
 
+// `songInfo` is structured as "song name + artist".
+// Split just to get the songTitle to work with.
+const getSongTitleFromLastfmResults = (songInfo) => {
+  let split = songInfo.split(' + ');
+  return split[0];
+};
 
-//TODO: Simplify function, this is way too much.
+
+//Some results from Genius contain non-ASCII characters
+const removeExtrasFromSongTitle = (songTitle) => {
+  return songTitle.toString().split(' (')[0];
+};
+
+//Takes the input and outputs a uniform, formatted result.
+const formatSongTitle = (songTitle) => {
+  let formatted = '';
+  
+  formatted = removeExtrasFromSongTitle(songTitle);
+  formatted = UTF8.encode(songTitle);
+  formatted = formatted.replace(/[^\x00-\x7F]/g, "");
+  formatted = formatted.toLowerCase();
+  
+  return formatted;
+};
+
+
+const songTitlesAreEqual = (lastfmTitle, geniusTitle) => {
+  let formattedTitles = formatSongTitle.apply(this, arguments);
+  return formattedTitles[0] === formattedTitles[1];
+};
+
+
+//songName is the formatted `song + artist`
 LYRICS.findSong = (songName) => {
   
   return new Promise((resolve, reject) => {
     GENIUS.search(songName)
       
       .then((response) => {
-        //FIXME: There should be nothing in this .then statement other than a resolution.
-        
-        // the response is structured as "song name + artist" for the search() method.
-        // seperates them to verify the song title is correct.
-        let split = songName.split(' + ');
-        let passedTitle = split[0];
-        //remove any instances of (, typically denotes a featured artist
-        passedTitle = passedTitle.split(' (')[0];
-        passedTitle = UTF8.encode(passedTitle);
-        passedTitle = passedTitle.toLowerCase();
+        let lastfmTitle = getSongTitleFromLastfmResults(songName);
         
         // Verify the title of the song to the title fetched by Genius.
         let i = 0;
         for (i; i < response.length; i) {
-          let responseTitle = response[i].title;
-          //FIXME: This is repeated code.
-          responseTitle = responseTitle.split(' (')[0];
-          responseTitle = UTF8.encode(responseTitle);
-          //removes all non-ascii characters to prevent Genius from coming up empty.
-          responseTitle = responseTitle.replace(/[^\x00-\x7F]/g, "");
-          responseTitle = responseTitle.toLowerCase();
+          let geniusTitle = response[i].title;
           
-          if (responseTitle === passedTitle) {
+          if (songTitlesAreEqual(lastfmTitle, geniusTitle)) {
             resolve(response[i]);
             break;
           }
-          else if (responseTitle !== passedTitle) i++;
+          else if (!songTitlesAreEqual(lastfmTitle, geniusTitle)) i++;
+          //to test if the values were even returned properly.
+          //TODO: Test if this is needed.
           else {
             i++;
             reject("resp title !== passed or no song exists in genius");
