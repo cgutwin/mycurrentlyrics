@@ -3,6 +3,9 @@
   "version": "0.0.100",
   "description": "Tweets lyrics from the song you're currently listening to",
   "main": "index.js",
+  "engines": {
+    "node": ">=8.0.0"
+  },
   "scripts": {
     "start": "node index.js"
   },
@@ -14,5 +17,9 @@
     "lyricist": "^2.2.2",
     "twitter": "^1.7.1",
     "utf8": "^3.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.5.0",
+    "eslint-plugin-node": "^7.0.1"
   }
 }
