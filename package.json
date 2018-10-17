@@ -1,6 +1,6 @@
 {
   "name": "MyCurrentLyrics",
-  "version": "0.0.100",
+  "version": "0.0.110",
   "description": "Tweets lyrics from the song you're currently listening to",
   "main": "index.js",
   "engines": {

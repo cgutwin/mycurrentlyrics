@@ -17,12 +17,33 @@ TWITTERHANDLER.sendTweet = (lyrics, mode) => {
     return null;
   }
   else if (mode === 'prod') {
-    CLIENT.post('statuses/update', {status: lyrics},  (err) => {
-      if (err) console.log(err);
-    });
+    return new Promise((resolve, reject) => {
+      
+      CLIENT.post('statuses/update', {status: lyrics},  (err, response) => {
+        if (err) {
+          console.log(err);
+          reject(err);
+        }
+        resolve({
+          id: response.id_str,
+          handle: `@${response.user.screen_name}`,
+        });
+      });
+    })
+    
   }
 };
 
+TWITTERHANDLER.replyToTweet = (inReplyTo, tweet, mode) => {
+  if (mode === 'test') {
+    return null;
+  }
+  else if (mode === 'prod') {
+    CLIENT.post('statuses/update', {status: tweet, in_reply_to_status_id: inReplyTo},  (err) => {
+      if (err) console.log(err);
+    });
+  }
+}
 
 
 module.exports = TWITTERHANDLER;

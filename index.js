@@ -40,7 +40,16 @@ STREAM.on('nowPlaying', (track) => {
           
           let lyricSnippet = pickSnippetFromGroupedLyrics(response.lyrics);
           let tweet = formatStringForTwitter(lyricSnippet);
-          TWITTER.sendTweet(tweet, MODE);
+          
+          TWITTER.sendTweet(tweet, MODE)
+            .then((response) => {
+            
+              console.log(response);
+              let reply = [response.handle, track.artist['#text'], track.name];
+              let formattedReply = formatStringForTwitter(reply);
+              
+              TWITTER.replyToTweet(response.id, formattedReply, MODE);
+            })
         })
     })
      .catch((err) => {
