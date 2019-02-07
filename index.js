@@ -11,8 +11,9 @@ const LASTFM = new LASTFM_NODE({
 
 const STREAM = LASTFM.stream(process.env.LASTFM_USERNAME, { autostart: true });
 //'test' or 'prod'.
-//TODO: Unit testing instead of this terrible thing.
+//TODO: Unit testing instead of this thing.
 const MODE = 'test';
+let lastTweetMinutes = null;
 
 
 const pickSnippetFromGroupedLyrics = (lyrics) => {
@@ -29,8 +30,12 @@ const formatStringForTwitter = (lyricSnippet) => {
 
 
 //FIXME: Double submissions. when the music is stopped, the nowPlaying picks up the stopped song again.
-STREAM.on('nowPlaying', (track) => {
-  console.log(`now playing ${track.name} by ${track.artist['#text']}`);
+STREAM.on('scrobbled', (track) => {
+  console.log(`just scrobbled ${track.name} by ${track.artist['#text']}`);
+  
+  let date = new Date();
+  let minutes = date.getMinutes();
+  let diff = minutes - lastTweetMinutes;
   
   GENIUS.findSong(`${track.name} + ${track.artist['#text']}`)
     .then((response) => {
@@ -40,24 +45,28 @@ STREAM.on('nowPlaying', (track) => {
           
           let lyricSnippet = pickSnippetFromGroupedLyrics(response.lyrics);
           let tweet = formatStringForTwitter(lyricSnippet);
-          
-          TWITTER.sendTweet(tweet, MODE)
-            .then((response) => {
+  
+          console.log(diff);
+          //only send the tweet if one hasn't been sent in the last 15 minutes, null is initiation case
+          if (Math.abs(diff) > 15 || lastTweetMinutes === null) {
+  
+            lastTweetMinutes = minutes;
             
-              console.log(response);
-              let reply = [response.handle, track.artist['#text'], track.name];
-              let formattedReply = formatStringForTwitter(reply);
-              
-              TWITTER.replyToTweet(response.id, formattedReply, MODE);
-            })
+            TWITTER.sendTweet(tweet, MODE)
+              .then((response) => {
+      
+                console.log(response);
+                let reply = [response.handle, track.artist['#text'], track.name];
+                let formattedReply = formatStringForTwitter(reply);
+      
+                TWITTER.replyToTweet(response.id, formattedReply, MODE);
+              })
+          }
         })
+        .catch(err => console.error(err))
     })
-     .catch((err) => {
-       console.error(err);
-     })
+     .catch(err => console.error(err))
 });
-
-
 
 // FIXME: Suppress the error that LastFM throws when the stream stops.
 STREAM.on('error', function(error) {

@@ -9,7 +9,6 @@ require('dotenv').config();
 
 const TWITTERHANDLER = {};
 
-
 TWITTERHANDLER.sendTweet = (lyrics, mode) => {
   console.log(lyrics + '\n \nin mode ' + mode);
   
